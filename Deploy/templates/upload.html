@@ -1,0 +1,464 @@
+<!doctype html>
+<head>
+    <title>DeepFake Video Detection System</title>
+    <style>
+        :root {
+            --primary: #3498ff;
+            --secondary: #00d8ff;
+            --dark-bg: #1a1d2a;
+            --panel-bg: #20232f;
+            --text: #e0e6ff;
+        }
+       
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+       
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+       
+        .header {
+            background: linear-gradient(90deg, var(--dark-bg), #252a3d);
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(0, 216, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+       
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--secondary), transparent);
+        }
+       
+        #title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+       
+        .subtitle {
+            text-align: center;
+            font-size: 1rem;
+            color: rgba(224, 230, 255, 0.7);
+            margin-top: 0.5rem;
+        }
+       
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 2rem 0;
+        }
+       
+        .panel {
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            width: 80%;
+            max-width: 800px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(52, 152, 255, 0.1);
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+       
+        .panel::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, rgba(0, 216, 255, 0.2) 0%, transparent 70%);
+            border-radius: 0 0 0 100%;
+        }
+       
+        h2 {
+            font-size: 1.5rem;
+            margin-top: 0;
+            color: var(--primary);
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+        }
+       
+        .upload-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem;
+            border: 2px dashed rgba(0, 216, 255, 0.3);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+       
+        .upload-area:hover {
+            border-color: rgba(0, 216, 255, 0.3);
+        }
+       
+        .upload-area.drag-over {
+            border-color: var(--secondary);
+            background-color: rgba(0, 216, 255, 0.05);
+        }
+       
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 1rem;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+       
+        input[type="file"] {
+            opacity: 0;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+       
+        .drop-btn {
+            background-color: #172537;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #2f7897;
+            display: block;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 80%;
+            max-width: 300px;
+            margin: 0 auto;
+            cursor: pointer;
+        }
+       
+        .drop-btn:hover {
+            box-shadow: 0 0 12px rgba(0, 216, 255, 0.6);
+        }
+       
+        .btn {
+            /* Modified to make button dimmer for better text visibility */
+            background: linear-gradient(90deg, rgba(52, 152, 255, 0.8), rgba(0, 216, 255, 0.8));
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(0, 216, 255, 0.3);
+            display: block;
+            margin: 1rem auto;
+        }
+       
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0, 216, 255, 0.4);
+        }
+       
+        .video-container {
+            width: 100%;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+       
+        video {
+            width: 100%;
+            display: block;
+            background-color: #151824;
+        }
+       
+        .result {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 1rem;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem; /* Added margin-bottom for spacing */
+            border-radius: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: all 0.5s ease;
+        }
+       
+        .result.real {
+            color: #2ecc71;
+            background-color: rgba(46, 204, 113, 0.1);
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+       
+        .result.fake {
+            color: #e74c3c;
+            background-color: rgba(231, 76, 60, 0.1);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+       
+        .features {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 3rem;
+            flex-wrap: wrap;
+        }
+       
+        .feature-card {
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 200px;
+            margin: 1rem;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(52, 152, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+       
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+            border-color: rgba(0, 216, 255, 0.3);
+        }
+       
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+       
+        .feature-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+       
+        .feature-desc {
+            font-size: 0.9rem;
+            color: rgba(224, 230, 255, 0.7);
+        }
+       
+        .messages {
+            background-color: rgba(52, 152, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--primary);
+        }
+       
+        .messages ul {
+            margin: 0;
+            padding-left: 1rem;
+        }
+       
+        .messages li {
+            margin-bottom: 0.5rem;
+        }
+       
+        .hidden {
+            display: none;
+        }
+       
+        @media (max-width: 768px) {
+            .panel {
+                width: 90%;
+                padding: 1.5rem;
+            }
+           
+            #title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1 id="title">DeepFake Video Detection</h1>
+            <p class="subtitle">A Machine Learning System to Detect Manipulated Videos</p>
+        </div>
+    </div>
+   
+    <main>
+        <div class="panel">
+            <h2>Upload & Analyze Video</h2>
+           
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div id="msg" class="messages" style="display: block;">
+                        <ul>
+                            {% for message in messages %}
+                            <li>{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            {% endwith %}
+           
+            {% if not filename %}
+            <!-- Only show upload area initially if no file has been uploaded -->
+            <div class="upload-area" id="dropzone">
+                <form method="post" action="/" enctype="multipart/form-data" id="uploadForm">
+                    <div class="file-input-wrapper">
+                        <input type="file" name="file" accept="video/*" autocomplete="off" required id="fileInput" class="hidden">
+                    </div>
+                    <div class="drop-btn" id="dropBtn">DROP A VIDEO FILE</div>
+                    <button class="btn hidden" type="submit" id="uploadBtn">Upload Video</button>
+                </form>
+            </div>
+            {% endif %}
+           
+            {% if filename %}
+                <div class="video-container">
+                    <video controls autoplay preload="auto">
+                        <source src="{{ url_for('display_video', filename=filename) }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+               
+                <form method="get" action="{{ url_for('sequence_prediction', filename=filename) }}" enctype="multipart/form-data">
+                    <button class="btn" id="analyzeBtn" type="submit" name="predict">Analyze Video</button>
+                </form>
+               
+                <!-- Prediction result moved to show below analyze button and above upload area -->
+                {% if prediction %}
+                    <div class="result {% if prediction == 'REAL' %}real{% else %}fake{% endif %}" id="res">
+                        {{prediction}}
+                    </div>
+                {% endif %}
+               
+                <!-- Upload area now appears after prediction result -->
+                <div class="upload-area" id="dropzone">
+                    <form method="post" action="/" enctype="multipart/form-data" id="uploadForm">
+                        <div class="file-input-wrapper">
+                            <input type="file" name="file" accept="video/*" autocomplete="off" required id="fileInput" class="hidden">
+                        </div>
+                        <div class="drop-btn" id="dropBtn">DROP A VIDEO FILE</div>
+                        <button class="btn hidden" type="submit" id="uploadBtn">Upload Video</button>
+                    </form>
+                </div>
+            {% endif %}
+           
+            <!-- Removed the prediction section from here as it's now above -->
+        </div>
+       
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <div class="feature-title">Deep Analysis</div>
+                <div class="feature-desc">Advanced algorithms detect manipulation patterns</div>
+            </div>
+           
+            <div class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <div class="feature-title">AI Powered</div>
+                <div class="feature-desc">Machine learning models trained on thousands of examples</div>
+            </div>
+           
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">Fast Results</div>
+                <div class="feature-desc">Quick processing for immediate verification</div>
+            </div>
+        </div>
+    </main>
+   
+    <script>
+        // Get DOM elements
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const dropBtn = document.getElementById('dropBtn');
+       
+        // Handle drag and drop events
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+        });
+       
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+       
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, highlight, false);
+        });
+       
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, unhighlight, false);
+        });
+       
+        function highlight() {
+            dropzone.classList.add('drag-over');
+        }
+       
+        function unhighlight() {
+            dropzone.classList.remove('drag-over');
+        }
+       
+        // Handle file drop
+        dropzone.addEventListener('drop', function(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+           
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelect(files[0]);
+            }
+        });
+       
+        // Click on drop button to select file
+        dropBtn.addEventListener('click', function() {
+            fileInput.click();
+        });
+       
+        // Handle file selection
+        fileInput.addEventListener('change', function() {
+            if (fileInput.files.length > 0) {
+                handleFileSelect(fileInput.files[0]);
+            }
+        });
+       
+        function handleFileSelect(file) {
+            // Update drop button with file name
+            dropBtn.textContent = file.name;
+            // Show upload button
+            uploadBtn.classList.remove('hidden');
+        }
+       
+        // Change result color based on prediction
+        const res = document.getElementById('res');
+        if (res) {
+            if (res.textContent.trim() === 'REAL') {
+                res.classList.add('real');
+            } else if (res.textContent.trim() === 'FAKE') {
+                res.classList.add('fake');
+            }
+        }
+    </script>
+</body>
+</html>

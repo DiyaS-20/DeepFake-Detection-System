@@ -1,2 +1,0 @@
-# DeepFake-Detection-System
- 
